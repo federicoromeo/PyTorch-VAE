@@ -24,6 +24,7 @@ parser.add_argument('--config',  '-c',
 args = parser.parse_args()
 with open(args.filename, 'r') as file:
     try:
+        print("Opening:", args.filename)
         config = yaml.safe_load(file)
     except yaml.YAMLError as exc:
         print(exc)
@@ -36,13 +37,13 @@ tb_logger =  TensorBoardLogger(save_dir=config['logging_params']['save_dir'],
 seed_everything(config['exp_params']['manual_seed'], True)
 
 model = vae_models[config['model_params']['name']](**config['model_params'])
-experiment = VAEXperiment(model,
-                          config['exp_params'])
+experiment = VAEXperiment(model, config['exp_params'])
 
 data = VAEDataset(**config["data_params"], pin_memory=len(config['trainer_params']['gpus']) != 0)
 
 data.setup()
 runner = Trainer(logger=tb_logger,
+                 accelerator=['cpu'],
                  callbacks=[
                      LearningRateMonitor(),
                      ModelCheckpoint(save_top_k=2, 
